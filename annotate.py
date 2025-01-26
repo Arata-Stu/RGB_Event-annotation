@@ -15,6 +15,7 @@ def main(subdirs):
 
         homography_path = os.path.join(subdir, "..", "homography_matrix.yaml")
         cmd = ["python3", "python/convert_labels.py", "-b", subdir, "-m",  homography_path]
+        subprocess.run(cmd)
     
 
 if __name__ == "__main__":

@@ -1,5 +1,6 @@
 import os
 import subprocess
+import time
 
 
 def main():
@@ -29,6 +30,9 @@ def main():
         "-ds", "gifu", "-np", str(NUM_PROCESSES)
     ]
 
+    # 時間計測開始
+    start_time = time.time()
+
     try:
         result = subprocess.run(command, check=True, text=True, capture_output=True)
         print("Preprocessing completed successfully!")
@@ -37,6 +41,11 @@ def main():
         print("Error: Preprocessing failed!")
         print(e.stderr)
         exit(1)
+
+    # 時間計測終了
+    end_time = time.time()
+    elapsed_time = end_time - start_time
+    print(f"Execution Time: {elapsed_time:.2f} seconds")
 
 if __name__ == "__main__":
     main()

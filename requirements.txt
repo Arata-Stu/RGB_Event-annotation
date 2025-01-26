@@ -1,0 +1,13 @@
+ultralytics
+h5py==3.8.0
+hdf5plugin==4.4.0
+tqdm
+numba
+pandas==1.5.3
+plotly==5.13.1
+opencv-python==4.6.0.66
+tabulate==0.9.0
+pycocotools==2.0.6
+bbox-visualizer==0.1.0
+StrEnum==0.4.10
+numpy==1.23.2

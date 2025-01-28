@@ -26,6 +26,22 @@ def load_exclusion_regions(base_dir):
 
     return exclusion_regions
 
+def load_filter_classes(base_dir):
+    yaml_path = os.path.join(base_dir, "../../", "filter_classes.yaml")
+    if not os.path.exists(yaml_path):
+        print("Warning: filter_classes.yaml not found, using default classes.")
+        return {}
+
+    with open(yaml_path, "r") as f:
+        data = yaml.load(f, Loader=yaml.FullLoader)
+
+    if "filter_classes" not in data:
+        print("Warning: filter_classes key not found in YAML.")
+        return {}
+
+    return {entry["id"]: entry["name"] for entry in data["filter_classes"]}
+
+
 def is_in_exclude_region(x1, y1, x2, y2, exclusion_regions, threshold=30):
     bbox_area = (x2 - x1) * (y2 - y1)
     if bbox_area <= 0:
@@ -46,7 +62,7 @@ def is_in_exclude_region(x1, y1, x2, y2, exclusion_regions, threshold=30):
             return True
     return False
 
-def process_images(base_dir, target_classes, render_mode):
+def process_images(base_dir, render_mode):
     images_dir = os.path.join(base_dir, "images")
     labels_dir = os.path.join(base_dir, "labels")
     os.makedirs(labels_dir, exist_ok=True)
@@ -72,6 +88,7 @@ def process_images(base_dir, target_classes, render_mode):
         return
 
     model = YOLO("yolo11x.pt")
+    filter_classes = load_filter_classes(base_dir)  # YAML からフィルタリングクラスをロード
 
     for camera_dir in camera_dirs:
         camera_path = os.path.join(images_dir, camera_dir)
@@ -117,23 +134,25 @@ def process_images(base_dir, target_classes, render_mode):
                     track_ids = result.boxes.id.cpu().tolist() if result.boxes.id is not None else [-1] * len(cls_ids)
 
                     for box, class_confidence, cls_id, track_id in zip(boxes, confs, cls_ids, track_ids):
+                        if cls_id not in filter_classes:
+                            continue  # 指定されたクラスのみ処理
+
                         x1, y1, x2, y2 = map(int, box)
-                        class_name = model.names[cls_id]
+                        class_name = filter_classes[cls_id]
 
                         if is_in_exclude_region(x1, y1, x2, y2, exclusion_regions, threshold=30):
                             continue
 
-                        if not target_classes or class_name in target_classes:
-                            all_data.append((
-                                timestamp,
-                                x1, y1, x2 - x1, y2 - y1,
-                                cls_id, float(class_confidence), track_id
-                            ))
+                        all_data.append((
+                            timestamp,
+                            x1, y1, x2 - x1, y2 - y1,
+                            cls_id, float(class_confidence), track_id
+                        ))
 
-                            if render_mode:
-                                cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
-                                label_text = f"{class_name} {track_id}"
-                                cv2.putText(frame, label_text, (x1, y1 - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+                        if render_mode:
+                            cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+                            label_text = f"{class_name} {track_id}"
+                            cv2.putText(frame, label_text, (x1, y1 - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
 
             if render_mode:
                 cv2.imshow("YOLO Detection with Exclusion Zones", frame)
@@ -151,8 +170,7 @@ def process_images(base_dir, target_classes, render_mode):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="YOLOで画像を解析し、リアルタイムGUI表示するスクリプト")
     parser.add_argument("-b", "--base_dir", required=True, help="ベースディレクトリへのパス")
-    parser.add_argument("-c", "--classes", nargs='*', default=["car", "bicycle", "person", "motorcycle", "bus"], help="検出対象クラス")
     parser.add_argument("--render", action='store_true', help="GUI表示を有効化する")
     
     args = parser.parse_args()
-    process_images(args.base_dir, args.classes, args.render)
+    process_images(args.base_dir, args.render)

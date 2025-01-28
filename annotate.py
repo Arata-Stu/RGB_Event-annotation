@@ -10,7 +10,7 @@ def get_subdirectories(directory):
 def main(subdirs):
 
     for subdir in subdirs:
-        cmd = ["python3", "python/track.py", "-b", subdir]
+        cmd = ["python3", "python/track.py", "-b", subdir, "--render"]
         subprocess.run(cmd)
 
         homography_path = os.path.join(subdir, "..", "homography_matrix.yaml")

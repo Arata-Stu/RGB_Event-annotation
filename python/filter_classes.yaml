@@ -1,0 +1,7 @@
+filter_classes:
+  - id: 0
+    name: person
+  - id: 1
+    name: bicycle
+  - id: 2
+    name: car

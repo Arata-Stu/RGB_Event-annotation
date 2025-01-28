@@ -92,7 +92,7 @@ def process_images(base_dir, render_mode):
 
     for camera_dir in camera_dirs:
         camera_path = os.path.join(images_dir, camera_dir)
-        output_file = os.path.join(labels_dir, f"{camera_dir}_labels_events.npy")
+        output_file = os.path.join(labels_dir, f"{camera_dir}_labels.npy")
 
         image_files = sorted([
             f for f in os.listdir(camera_path)

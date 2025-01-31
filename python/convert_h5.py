@@ -57,7 +57,7 @@ if __name__ == "__main__":
     parser.add_argument("--base_dir", "-b", required=True, help="Path to the input directory")
     parser.add_argument("--width", "-W", default=640, type=int, help="Image width")
     parser.add_argument("--height", "-H", default=480, type=int, help="Image height")
-    parser.add_argument("--rotate", "-r", action="store_true", help="Apply 180-degree rotation")
+    parser.add_argument("--rotate", "-r", required=False, default=False, help="Apply 180-degree rotation")
     args = parser.parse_args()
 
     convert_hdf5(args.base_dir, args.width, args.height, args.rotate)

@@ -47,22 +47,43 @@ std::vector<int64_t> load_triggers(const std::string& trigger_file) {
 // HDF5ファイルからイベントデータを読み込む
 std::vector<Event> load_events_from_hdf5(const std::string& hdf5_file) {
     H5File file(hdf5_file, H5F_ACC_RDONLY);
-    DataSet dataset = file.openDataSet("/events");
-    DataSpace dataspace = dataset.getSpace();
+    
+    // データセットを開く
+    DataSet p_dataset = file.openDataSet("/events/p");
+    DataSet t_dataset = file.openDataSet("/events/t");
+    DataSet x_dataset = file.openDataSet("/events/x");
+    DataSet y_dataset = file.openDataSet("/events/y");
+
+    // データサイズを取得
+    DataSpace dataspace = p_dataset.getSpace();
     hsize_t dims[1];
     dataspace.getSimpleExtentDims(dims, nullptr);
     size_t num_events = dims[0];
 
-    CompType eventType(sizeof(Event));
-    eventType.insertMember("x", HOFFSET(Event, x), PredType::NATIVE_UINT16);
-    eventType.insertMember("y", HOFFSET(Event, y), PredType::NATIVE_UINT16);
-    eventType.insertMember("p", HOFFSET(Event, p), PredType::NATIVE_INT16);
-    eventType.insertMember("t", HOFFSET(Event, t), PredType::NATIVE_INT64);
+    // メモリ確保
+    std::vector<uint8_t> p_data(num_events); // p は uint8_t
+    std::vector<uint64_t> t_data(num_events);
+    std::vector<uint16_t> x_data(num_events);
+    std::vector<uint16_t> y_data(num_events);
 
+    // データ読み込み
+    p_dataset.read(p_data.data(), PredType::NATIVE_UINT8);
+    t_dataset.read(t_data.data(), PredType::NATIVE_UINT64);
+    x_dataset.read(x_data.data(), PredType::NATIVE_UINT16);
+    y_dataset.read(y_data.data(), PredType::NATIVE_UINT16);
+
+    // イベントデータに変換
     std::vector<Event> events(num_events);
-    dataset.read(events.data(), eventType);
+    for (size_t i = 0; i < num_events; ++i) {
+        events[i].x = x_data[i];
+        events[i].y = y_data[i];
+        events[i].p = p_data[i];  // 極性を -1, 1 にする
+        events[i].t = t_data[i];
+    }
+
     return events;
 }
+
 
 // イベントデータからフレームを作成する関数
 cv::Mat create_frame(const std::vector<Event>& events, int width, int height) {

@@ -161,7 +161,38 @@ def process_images(base_dir, render_mode):
                     cv2.destroyAllWindows()
                     return
 
-        np.save(output_file, np.array(all_data))
+        dtype_labels = np.dtype([
+            ('t', 'int64'),             # タイムスタンプ
+            ('x', 'int32'),             # バウンディングボックス x（左上）
+            ('y', 'int32'),             # バウンディングボックス y（左上）
+            ('w', 'int32'),             # バウンディングボックス 幅
+            ('h', 'int32'),             # バウンディングボックス 高さ
+            ('class_id', 'int32'),      # クラスID
+            ('class_confidence', 'float32'),  # 信頼度
+            ('track_id', 'int32')       # トラッキングID
+        ])
+
+        # all_data を構造化配列に変換して保存
+        structured_data = []
+        for item in all_data:
+            # all_data は以下の並び
+            # (timestamp, x1, y1, w, h, cls_id, class_confidence, track_id)
+            # ただし w= x2 - x1, h= y2 - y1
+            t, x, y, w, h, cls_id, conf, track_id = item
+
+            structured_data.append((
+                np.int64(t),
+                np.int32(x),
+                np.int32(y),
+                np.int32(w),
+                np.int32(h),
+                np.int32(cls_id),
+                np.float32(conf),
+                np.int32(track_id)
+            ))
+
+        structured_data = np.array(structured_data, dtype=dtype_labels)
+        np.save(output_file, structured_data)
         print(f"Saved: {output_file}")
 
     if render_mode:

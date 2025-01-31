@@ -11,3 +11,4 @@ pycocotools==2.0.6
 bbox-visualizer==0.1.0
 StrEnum==0.4.10
 numpy==1.23.2
+omegaconf

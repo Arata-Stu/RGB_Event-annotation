@@ -103,7 +103,7 @@ def convert_hdf5(base_dir, W, H, rotate):
         print("No HDF5 file found in", event_dir)
         return
 
-    output_file = "events.h5"
+    output_file = os.path.join(event_dir,"events.h5")
 
     # HDF5ファイルを開く
     with h5py.File(input_file, "r") as f_in, h5py.File(output_file, "w") as f_out:

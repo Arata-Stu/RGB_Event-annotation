@@ -68,7 +68,8 @@ def process_labels(base_dir, matrix_path):
     all_transformed_data = []
 
     for label_file in label_files:
-        camera_name = label_file.replace("_labels_events.npy", "")
+        # カメラ名を取得（`_labels_events.npy` を削除）
+        camera_name = label_file.replace("_labels.npy", "")
 
         input_file = os.path.join(labels_dir, label_file)
 
@@ -76,7 +77,7 @@ def process_labels(base_dir, matrix_path):
             homography_matrix = load_homography(matrix_path, camera_name)
             print(f"Loaded homography matrix for {camera_name}:\n{homography_matrix}")  # デバッグ用
         except ValueError as e:
-            print(e)
+            print(f"Warning: {e} Skipping {label_file}.")
             continue
         
         print(f"Processing {label_file} with homography transformation.")
@@ -139,12 +140,19 @@ def process_labels(base_dir, matrix_path):
     print(f"Saved: {output_file}")
 
 
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="YOLOの推論結果をホモグラフィ変換し、全カメラのデータを統合して `labels_events.npy` に保存します。"
     )
     parser.add_argument("-b", "--base_dir", required=True, help="ベースディレクトリへのパス")
-    parser.add_argument("-m", "--matrix", required=True, help="ホモグラフィ行列（YAMLファイル）へのパス")
+    parser.add_argument("-m", "--matrix", required=False, help="ホモグラフィ行列（YAMLファイル）へのパス")
 
     args = parser.parse_args()
+
+    # `-m` の指定がない場合、`base_dir/../homography_matrix.yaml` をデフォルトパスとする
+    if args.matrix is None:
+        args.matrix = os.path.abspath(os.path.join(args.base_dir, "..", "homography_matrix.yaml"))
+        print(f"Homography matrix path not provided, using default: {args.matrix}")
+
     process_labels(args.base_dir, args.matrix)

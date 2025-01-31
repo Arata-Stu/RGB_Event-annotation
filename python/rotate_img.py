@@ -26,29 +26,22 @@ def process_directory(camera_path):
         # すべてのスレッドの完了を待機
         concurrent.futures.wait(futures)
 
-def process_base_dir(base_dir):
-    """ base_dir内の全カメラディレクトリを処理 """
-    if not os.path.isdir(base_dir):
-        print(f"Error: 指定したディレクトリが存在しません -> {base_dir}")
+def process_sequence_dir(sequence_path):
+    """ sequenceディレクトリ内の全カメラディレクトリを処理 """
+    images_path = os.path.join(sequence_path, "images")
+    if not os.path.isdir(images_path):
+        print(f"Error: imagesディレクトリが存在しません -> {images_path}")
         sys.exit(1)
 
-    print(f"Processing base directory: {base_dir}")
-    for sequence in os.scandir(base_dir):
-        sequence_path = os.path.join(sequence.path, "images")
-        print(f"Processing sequence: {sequence_path}")
-        if not os.path.isdir(sequence_path):
-            print(f"Error: imagesディレクトリが存在しません -> {sequence_path}")
-            continue
-        
-        for folder in os.scandir(sequence_path):
-            if "camera" in folder.name and folder.is_dir():
-                print(f"Processing: {folder.path}")
-                process_directory(folder.path)
+    print(f"Processing sequence: {sequence_path}")
+    for folder in os.scandir(images_path):
+        if "camera" in folder.name and folder.is_dir():
+            print(f"Processing: {folder.path}")
+            process_directory(folder.path)
 
 if __name__ == "__main__":
-    
-    parser = argparse.ArgumentParser(description="Rotate all images in the specified directory.")
-    parser.add_argument("--base_dir", "-b", required=True, help="Base directory containing camera directories")
+    parser = argparse.ArgumentParser(description="Rotate all images in the specified sequence directory.")
+    parser.add_argument("--base_dir", "-b", required=True, help="Sequence directory containing images directory")
     args = parser.parse_args()
 
-    process_base_dir(args.base_dir)
+    process_sequence_dir(args.base_dir)
